@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto space-y-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Editais Oficiais 2026 Vigentes
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">
+        Educação e Acolhimento para <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Refugiados e Migrantes</span> no Brasil.
+      </h1>
+
+      <p class="text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
+        Acesse vagas especiais em universidades públicas (Cátedra Sérgio Vieira de Mello), cursos gratuitos de português e suporte institucional sem burocracia.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+        <a href="/editais" class="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all">
+          Ver Editais Abertos
+        </a>
+        <a href="/chat" class="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm border border-slate-300 shadow-sm transition-all flex items-center gap-2">
+          <span>Conversar com Assistente IA</span>
+          <span class="text-brand-600">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Editais em Destaque -->
+<section class="py-12 bg-white border-y border-slate-200/80">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+      <div>
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Oportunidades em Destaque</h2>
+        <p class="text-sm text-slate-500">Editais com inscrições abertas e verificados oficialmente.</p>
+      </div>
+      <a href="/editais" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+        Explorar todos os editais &rarr;
+      </a>
+    </div>
+
+    {% if notices %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for notice in notices[:6] %}
+        {% include "partials/notice_card.html" %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-12 text-center text-slate-500">
+      <p class="text-sm font-semibold">Novos editais estão sendo analisados e serão publicados em breve.</p>
+      <a href="/chat" class="inline-block mt-3 text-xs font-bold text-brand-600">Perguntar ao assistente sobre sua universidade &rarr;</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Inscrição por E-mail -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  {% include "partials/subscribe_form.html" %}
+</section>
+{% endblock %}

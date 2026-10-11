@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Editais e Cursos — migrantEU{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="mb-8">
+    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Oportunidades Oficiais Vigentes</h1>
+    <p class="text-sm text-slate-600 mt-1">Filtre por categoria ou unidade da federação para encontrar editais com inscrições abertas.</p>
+  </div>
+
+  <!-- Filtros HTMX -->
+  <div class="bg-white p-4 rounded-2xl border border-slate-200/80 mb-8 shadow-sm">
+    <form hx-get="/editais" hx-target="#notices-grid" hx-select="#notices-grid" hx-swap="outerHTML" hx-push-url="true" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoria:</label>
+        <select name="categoria" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="" {% if not active_category %}selected{% endif %}>Todas as Categorias</option>
+          <option value="ensino_superior" {% if active_category == 'ensino_superior' %}selected{% endif %}>Ensino Superior (Graduação)</option>
+          <option value="curso_portugues" {% if active_category == 'curso_portugues' %}selected{% endif %}>Cursos de Português (PLAC)</option>
+          <option value="acolhimento_social" {% if active_category == 'acolhimento_social' %}selected{% endif %}>Acolhimento Social / Jurídico</option>
+          <option value="pos_graduacao" {% if active_category == 'pos_graduacao' %}selected{% endif %}>Pós-Graduação (Mestrado/Doutorado)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Estado (UF):</label>
+        <select name="uf" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="" {% if not active_uf %}selected{% endif %}>Todos os Estados</option>
+          <option value="PR" {% if active_uf == 'PR' %}selected{% endif %}>Paraná (PR)</option>
+          <option value="SP" {% if active_uf == 'SP' %}selected{% endif %}>São Paulo (SP)</option>
+          <option value="RS" {% if active_uf == 'RS' %}selected{% endif %}>Rio Grande do Sul (RS)</option>
+          <option value="SC" {% if active_uf == 'SC' %}selected{% endif %}>Santa Catarina (SC)</option>
+          <option value="DF" {% if active_uf == 'DF' %}selected{% endif %}>Distrito Federal (DF)</option>
+          <option value="RJ" {% if active_uf == 'RJ' %}selected{% endif %}>Rio de Janeiro (RJ)</option>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <a href="/editais" class="text-xs font-bold text-slate-500 hover:text-slate-800 p-3">Limpar Filtros</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Grid de Editais -->
+  <div id="notices-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% if notices %}
+      {% for notice in notices %}
+        {% include "partials/notice_card.html" %}
+      {% endfor %}
+    {% else %}
+      <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500">
+        <p class="text-sm font-semibold">Nenhum edital ativo encontrado com os filtros selecionados.</p>
+        <p class="text-xs text-slate-400 mt-1">Experimente remover os filtros ou faça uma consulta ao Assistente IA.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

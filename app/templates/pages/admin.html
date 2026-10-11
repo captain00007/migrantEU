@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Administrativo & Moderação — migrantEU{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+  
+  <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900">Painel de Gestão e Moderação</h1>
+      <p class="text-xs text-slate-500">Validação Human-in-the-Loop para disparo de editais e controle de modelos de IA</p>
+    </div>
+    <a href="/admin/logout" class="text-xs font-semibold text-rose-600 hover:text-rose-800">Encerrar Sessão</a>
+  </div>
+
+  <!-- SEÇÃO 1: TROCA DINÂMICA DE MODELOS DE IA -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <div class="mb-4">
+      <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+        <span>🧠 Switch Ativo de Inteligência Artificial</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 font-semibold">Tempo Real</span>
+      </h2>
+      <p class="text-xs text-slate-500">Alterne o provedor e os modelos do chat e embeddings sem reiniciar o servidor.</p>
+    </div>
+
+    <form method="POST" action="/admin/ai-settings" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Provedor de LLM</label>
+        <select name="llm_provider" class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50">
+          <option value="google" {% if ai_config.llm_provider == 'google' %}selected{% endif %}>Google Gemini</option>
+          <option value="openai" {% if ai_config.llm_provider == 'openai' %}selected{% endif %}>OpenAI</option>
+          <option value="ollama" {% if ai_config.llm_provider == 'ollama' %}selected{% endif %}>Ollama (Local)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Modelo de LLM</label>
+        <input type="text" name="llm_model" value="{{ ai_config.llm_model }}"
+          class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50" placeholder="ex: gemini-1.5-flash ou gpt-4o-mini">
+      </div>
+
+      <div class="flex items-end">
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all">
+          Salvar Configurações de IA
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- SEÇÃO 2: EDITAIS PENDENTES DE APROVAÇÃO (HUMAN-IN-THE-LOOP) -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-bold text-slate-900">Editais Aguardando Aprovação (Human-in-the-Loop)</h2>
+        <p class="text-xs text-slate-500">Editais descobertos pelo robô ou agentes. Ao aprovar, o edital torna-se vigente e dispara e-mails via Resend.</p>
+      </div>
+      <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+        {{ pending_notices | length }} pendente(s)
+      </span>
+    </div>
+
+    {% if pending_notices %}
+    <div class="divide-y divide-slate-100">
+      {% for notice in pending_notices %}
+      <div id="notice-row-{{ notice.id }}" class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1 max-w-2xl">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-brand-700">{{ notice.institution_name or notice.institution_sigla }}</span>
+            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold uppercase">{{ notice.category }}</span>
+            <span class="text-xs text-slate-400">Prazo: {{ notice.end_date }}</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">{{ notice.title }}</h3>
+          <p class="text-xs text-slate-600 line-clamp-2">{{ notice.summary }}</p>
+          <a href="{{ notice.notice_url }}" target="_blank" class="text-xs font-semibold text-brand-600 hover:underline inline-block mt-1">Ver link oficial &rarr;</a>
+        </div>
+
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button hx-post="/admin/notices/{{ notice.id }}/approve"
+                  hx-target="#notice-row-{{ notice.id }}"
+                  hx-swap="outerHTML"
+                  class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-sm">
+            Aprovar & Disparar E-mails
+          </button>
+          <button hx-post="/admin/notices/{{ notice.id }}/reject"
+                  hx-target="#notice-row-{{ notice.id }}"
+                  hx-swap="outerHTML"
+                  class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 font-bold text-xs transition-colors">
+            Rejeitar
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="py-12 text-center text-slate-400 text-sm">
+      Nenhum edital pendente no momento. Todos os editais foram moderados!
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

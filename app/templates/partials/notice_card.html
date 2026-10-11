@@ -1,0 +1,41 @@
+<div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:shadow-md hover:border-brand-200 transition-all flex flex-col justify-between group">
+  <div>
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+        {% if notice.category == 'ensino_superior' %}bg-blue-100 text-blue-800
+        {% elif notice.category == 'curso_portugues' %}bg-emerald-100 text-emerald-800
+        {% elif notice.category == 'pos_graduacao' %}bg-purple-100 text-purple-800
+        {% else %}bg-amber-100 text-amber-800{% endif %}">
+        {% if notice.category == 'ensino_superior' %}Ensino Superior
+        {% elif notice.category == 'curso_portugues' %}Português (PLAC)
+        {% elif notice.category == 'pos_graduacao' %}Pós-Graduação
+        {% else %}Acolhimento Social{% endif %}
+      </span>
+      <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+        {{ notice.institution_uf or 'BR' }}
+      </span>
+    </div>
+
+    <h3 class="text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 mb-1">
+      {{ notice.title }}
+    </h3>
+    <p class="text-xs font-semibold text-brand-700 mb-3">
+      {{ notice.institution_name or notice.institution_sigla or 'Instituição Oficial' }}
+    </p>
+
+    <p class="text-xs text-slate-600 line-clamp-3 leading-relaxed mb-4">
+      {{ notice.summary }}
+    </p>
+  </div>
+
+  <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+    <div class="text-slate-500">
+      <span class="block text-[10px] uppercase font-bold text-slate-400">Inscrições até</span>
+      <span class="font-bold text-rose-600">{{ notice.end_date }}</span>
+    </div>
+    <a href="{{ notice.notice_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-colors shadow-sm">
+      Acessar Edital
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+    </a>
+  </div>
+</div>
