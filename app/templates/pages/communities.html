@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Comunidades & Redes de Apoio — migrantEU{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  
+  <!-- Cabeçalho -->
+  <div class="mb-10">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-bold mb-3 shadow-sm">
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+      <span>Redes de Solidariedade e Acolhimento</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Comunidades & Associações Migrantes</h1>
+    <p class="text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+      Encontre coletivos, associações culturais e redes de suporte mútuo da sua nacionalidade ou região para auxílio com documentação, moradia e acolhimento social no Brasil.
+    </p>
+  </div>
+
+  <!-- Filtros HTMX (Bento Azul-Branco) -->
+  <div class="bento-card rounded-3xl p-6 sm:p-7 mb-10 shadow-sm bg-white/95 border border-slate-200/90">
+    <form hx-get="/comunidades" hx-target="#communities-grid" hx-select="#communities-grid" hx-swap="outerHTML" hx-push-url="true" class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nacionalidade / Origem:</label>
+        <select name="nacionalidade" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-3 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+          <option value="" {% if not active_nationality %}selected{% endif %}>Todas as Origens</option>
+          {% if nationalities %}
+            {% for nat in nationalities %}
+              <option value="{{ nat }}" {% if active_nationality == nat %}selected{% endif %}>{{ nat }}</option>
+            {% endfor %}
+          {% else %}
+            <option value="Haiti" {% if active_nationality == 'Haiti' %}selected{% endif %}>Haiti</option>
+            <option value="Venezuela" {% if active_nationality == 'Venezuela' %}selected{% endif %}>Venezuela</option>
+            <option value="Afeganistão" {% if active_nationality == 'Afeganistão' %}selected{% endif %}>Afeganistão</option>
+            <option value="Síria" {% if active_nationality == 'Síria' %}selected{% endif %}>Síria</option>
+            <option value="Congo" {% if active_nationality == 'Congo' %}selected{% endif %}>República Democrática do Congo</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Estado (UF):</label>
+        <select name="uf" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-3 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+          <option value="" {% if not active_uf %}selected{% endif %}>Todos os Estados</option>
+          <option value="SP" {% if active_uf == 'SP' %}selected{% endif %}>São Paulo (SP)</option>
+          <option value="PR" {% if active_uf == 'PR' %}selected{% endif %}>Paraná (PR)</option>
+          <option value="RR" {% if active_uf == 'RR' %}selected{% endif %}>Roraima (RR)</option>
+          <option value="AM" {% if active_uf == 'AM' %}selected{% endif %}>Amazonas (AM)</option>
+          <option value="RJ" {% if active_uf == 'RJ' %}selected{% endif %}>Rio de Janeiro (RJ)</option>
+          <option value="RS" {% if active_uf == 'RS' %}selected{% endif %}>Rio Grande do Sul (RS)</option>
+          <option value="SC" {% if active_uf == 'SC' %}selected{% endif %}>Santa Catarina (SC)</option>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <a href="/comunidades" class="w-full text-center text-xs font-bold text-slate-500 hover:text-sky-600 p-3 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all">
+          ✕ Limpar Filtros
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Grid de Comunidades -->
+  <div id="communities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% if communities %}
+      {% for comm in communities %}
+        <div class="bento-card rounded-3xl p-6 sm:p-7 shadow-sm bg-white/95 border border-slate-200/90 flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                {{ comm.nationality_or_origin }}
+              </span>
+              <div class="flex items-center gap-1.5">
+                {% if comm.is_verified %}
+                  <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    Verificada
+                  </span>
+                {% endif %}
+                <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                  {{ comm.uf or 'Brasil' }}
+                </span>
+              </div>
+            </div>
+
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-sky-600 transition-colors mb-1.5">
+              {{ comm.name }}
+            </h3>
+
+            {% if comm.city %}
+              <p class="text-xs font-bold text-sky-700 mb-2 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                {{ comm.city }}{% if comm.uf %}, {{ comm.uf }}{% endif %}
+              </p>
+            {% endif %}
+
+            {% if comm.primary_language %}
+              <p class="text-[11px] font-medium text-slate-500 mb-3">
+                Idiomas de acolhimento: <span class="text-slate-800 font-bold">{{ comm.primary_language }}</span>
+              </p>
+            {% endif %}
+
+            <p class="text-xs text-slate-600 line-clamp-4 leading-relaxed mb-6 font-normal">
+              {{ comm.description }}
+            </p>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 space-y-2.5 text-xs mt-auto">
+            {% if comm.whatsapp_group_url %}
+              <a href="{{ comm.whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold transition-all shadow-sm">
+                <span>Participar no WhatsApp</span>
+              </a>
+            {% endif %}
+
+            <div class="flex items-center gap-2">
+              {% if comm.website_or_social_url %}
+                <a href="{{ comm.website_or_social_url }}" target="_blank" rel="noopener noreferrer" class="flex-1 text-center py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 font-bold text-[11px] transition-all">
+                  Rede Social / Site
+                </a>
+              {% endif %}
+              {% if comm.contact_email %}
+                <a href="mailto:{{ comm.contact_email }}" class="flex-1 text-center py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 font-bold text-[11px] transition-all truncate">
+                  E-mail
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-span-full bento-card rounded-3xl p-14 text-center text-slate-500">
+        <h3 class="text-base font-bold text-slate-900 mb-1">Nenhuma comunidade encontrada com os filtros selecionados</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto">Experimente limpar os filtros ou tire sua dúvida no Assistente Virtual no Chat IA.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

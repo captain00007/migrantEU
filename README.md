@@ -172,8 +172,6 @@ pytest -m e2e -v
 
 ---
 
-## 📄 Licença e Compromisso Social
+## 📄 Compromisso Social
 
 Desenvolvido com carinho para apoiar a reconstrução de vidas, o acesso à educação superior e o acolhimento digno de pessoas em situação de refúgio e migração no Brasil.
-
-Distribuído sob a licença **MIT**. Sinta-se livre para contribuir e expandir esta rede de acolhimento!

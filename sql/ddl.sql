@@ -1,12 +1,12 @@
 -- ============================================================================
 -- migrantEU - DDL Schema para Supabase (PostgreSQL + pgvector)
--- Dimensão vetorial unificada: 768 (Gemini, Ollama e OpenAI MRL)
+-- DimensÃ£o vetorial unificada: 768 (Gemini, Ollama e OpenAI MRL)
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
--- 1. Criação de tipos enumerados de status
+-- 1. CriaÃ§Ã£o de tipos enumerados de status
 DO $$ BEGIN
     CREATE TYPE notice_status AS ENUM (
         'pendente_aprovacao',
@@ -15,8 +15,8 @@ DO $$ BEGIN
     );
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- 2. Tabela de Configurações Dinâmicas do Sistema (Troca de modelos em runtime)
--- Os usuários administrativos são gerenciados diretamente pelo Supabase Auth (auth.users)
+-- 2. Tabela de ConfiguraÃ§Ãµes DinÃ¢micas do Sistema (Troca de modelos em runtime)
+-- Os usuÃ¡rios administrativos sÃ£o gerenciados diretamente pelo Supabase Auth (auth.users)
 CREATE TABLE IF NOT EXISTS system_settings (
     key VARCHAR(100) PRIMARY KEY,
     value JSONB NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 3. Tabela de Categorias Dinâmicas de Oportunidades
+-- 3. Tabela de Categorias DinÃ¢micas de Oportunidades
 CREATE TABLE IF NOT EXISTS categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     slug VARCHAR(50) UNIQUE NOT NULL,
@@ -32,11 +32,12 @@ CREATE TABLE IF NOT EXISTS categories (
     description TEXT,
     badge_color VARCHAR(30) DEFAULT 'blue',
     is_active BOOLEAN NOT NULL DEFAULT true,
+    consent_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()), -- Auditoria de Consentimento LGPD (Lei 13.709/2018)
     created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 4. Tabela de Instituições Oficiais
+-- 4. Tabela de InstituiÃ§Ãµes Oficiais
 CREATE TABLE IF NOT EXISTS institutions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS institutions (
     website_url TEXT NOT NULL,
     official_domain VARCHAR(150) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
+    consent_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()), -- Auditoria de Consentimento LGPD (Lei 13.709/2018)
     created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
@@ -61,12 +63,12 @@ CREATE TABLE IF NOT EXISTS notices (
     end_date DATE NOT NULL,
     summary TEXT NOT NULL,
     status notice_status NOT NULL DEFAULT 'pendente_aprovacao',
-    embedding vector(768), -- Dimensão vetorial unificada em 768
+    embedding vector(768), -- DimensÃ£o vetorial unificada em 768
     created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 6. Tabela de Assinantes por E-mail (Usuários Finais - Sem Senha)
+-- 6. Tabela de Assinantes por E-mail (UsuÃ¡rios Finais - Sem Senha)
 CREATE TABLE IF NOT EXISTS subscribers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -74,11 +76,33 @@ CREATE TABLE IF NOT EXISTS subscribers (
     uf_preference VARCHAR(2),
     magic_token UUID NOT NULL DEFAULT uuid_generate_v4(),
     is_active BOOLEAN NOT NULL DEFAULT true,
+    consent_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()), -- Auditoria de Consentimento LGPD (Lei 13.709/2018)
     created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 7. Índices de Otimização e Cache
+-- 7. Tabela de Comunidades e Redes de Acolhimento Cultural/MigratÃ³rio
+CREATE TABLE IF NOT EXISTS communities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    nationality_or_origin VARCHAR(100) NOT NULL,
+    primary_language VARCHAR(50),
+    uf VARCHAR(2),
+    city VARCHAR(150),
+    description TEXT,
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    whatsapp_group_url TEXT,
+    website_or_social_url TEXT,
+    is_verified BOOLEAN NOT NULL DEFAULT false,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    consent_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()), -- Auditoria de Consentimento LGPD (Lei 13.709/2018)
+    created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- 8. Ãndices de OtimizaÃ§Ã£o e Cache
 CREATE INDEX IF NOT EXISTS idx_notices_cache_lookup 
 ON notices (institution_id, category_id, status, end_date);
 
@@ -98,16 +122,25 @@ ON categories (slug);
 CREATE INDEX IF NOT EXISTS idx_institutions_official_domain 
 ON institutions (official_domain);
 
+CREATE INDEX IF NOT EXISTS idx_communities_nationality 
+ON communities (nationality_or_origin);
+
+CREATE INDEX IF NOT EXISTS idx_communities_uf 
+ON communities (uf);
+
+CREATE INDEX IF NOT EXISTS idx_communities_slug 
+ON communities (slug);
+
 -- NOTA DE PERFORMANCE: Em fase inicial e MVP, a busca exata (flat/sequential scan)
--- garante 100% de recall, resposta ultrarrápida (<5ms para centenas/milhares de editais)
--- e elimina o overhead de construção de grafo em memória a cada inserção.
--- O índice aproximado HNSW só deve ser criado quando o volume de dados justificar:
+-- garante 100% de recall, resposta ultrarrÃ¡pida (<5ms para centenas/milhares de editais)
+-- e elimina o overhead de construÃ§Ã£o de grafo em memÃ³ria a cada inserÃ§Ã£o.
+-- O Ã­ndice aproximado HNSW sÃ³ deve ser criado quando o volume de dados justificar:
 --
 -- CREATE INDEX IF NOT EXISTS idx_notices_embedding_hnsw_768 
 -- ON notices USING hnsw (embedding vector_cosine_ops)
 -- WITH (m = 16, ef_construction = 64);
 
--- 8. Trigger para updated_at automático
+-- 9. Trigger para updated_at automÃ¡tico
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -132,7 +165,11 @@ DROP TRIGGER IF EXISTS set_timestamp_subscribers ON subscribers;
 CREATE TRIGGER set_timestamp_subscribers
 BEFORE UPDATE ON subscribers FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
 
--- 9. RPC para busca semântica no Supabase (768 dimensões com join em categories)
+DROP TRIGGER IF EXISTS set_timestamp_communities ON communities;
+CREATE TRIGGER set_timestamp_communities
+BEFORE UPDATE ON communities FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+
+-- 10. RPC para busca semÃ¢ntica no Supabase (768 dimensÃµes com join em categories)
 CREATE OR REPLACE FUNCTION match_notices (
   query_embedding vector(768),
   match_threshold float DEFAULT 0.60,
@@ -183,3 +220,21 @@ BEGIN
   LIMIT match_count;
 END;
 $$;
+
+
+-- ============================================================================
+-- 11. Permissões de Acesso (GRANTs) para as roles do Supabase
+-- Garante que service_role, anon e authenticated possuam acesso completo
+-- ============================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
+
+-- Atualização de esquema para suporte a LGPD (consent_at)
+ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW());

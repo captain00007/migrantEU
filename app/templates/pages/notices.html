@@ -3,18 +3,26 @@
 {% block title %}Catálogo de Editais e Cursos — migrantEU{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <div class="mb-8">
-    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Oportunidades Oficiais Vigentes</h1>
-    <p class="text-sm text-slate-600 mt-1">Filtre por categoria ou unidade da federação para encontrar editais com inscrições abertas.</p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  
+  <!-- Cabeçalho da Página -->
+  <div class="mb-10">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-bold mb-3 shadow-sm">
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+      <span>Base Oficial de Editais 2026</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Oportunidades Oficiais Vigentes</h1>
+    <p class="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+      Filtre por categoria acadêmica ou unidade federativa (UF) para encontrar editais com inscrições abertas e isenção de taxas.
+    </p>
   </div>
 
-  <!-- Filtros HTMX -->
-  <div class="bg-white p-4 rounded-2xl border border-slate-200/80 mb-8 shadow-sm">
-    <form hx-get="/editais" hx-target="#notices-grid" hx-select="#notices-grid" hx-swap="outerHTML" hx-push-url="true" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <!-- Filtros HTMX (Bento Azul-Branco) -->
+  <div class="bento-card rounded-3xl p-6 sm:p-7 mb-10 shadow-sm bg-white/95 border border-slate-200/90">
+    <form hx-get="/editais" hx-target="#notices-grid" hx-select="#notices-grid" hx-swap="outerHTML" hx-push-url="true" class="grid grid-cols-1 sm:grid-cols-3 gap-5">
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoria:</label>
-        <select name="categoria" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Categoria:</label>
+        <select name="categoria" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-3 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
           <option value="" {% if not active_category %}selected{% endif %}>Todas as Categorias</option>
           {% if categories %}
             {% for cat in categories %}
@@ -31,8 +39,8 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Estado (UF):</label>
-        <select name="uf" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Estado (UF):</label>
+        <select name="uf" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-3 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
           <option value="" {% if not active_uf %}selected{% endif %}>Todos os Estados</option>
           <option value="PR" {% if active_uf == 'PR' %}selected{% endif %}>Paraná (PR)</option>
           <option value="SP" {% if active_uf == 'SP' %}selected{% endif %}>São Paulo (SP)</option>
@@ -50,7 +58,9 @@
       </div>
 
       <div class="flex items-end">
-        <a href="/editais" class="text-xs font-bold text-slate-500 hover:text-slate-800 p-3">Limpar Filtros</a>
+        <a href="/editais" class="w-full text-center text-xs font-bold text-slate-500 hover:text-sky-600 p-3 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all">
+          ✕ Limpar Filtros
+        </a>
       </div>
     </form>
   </div>
@@ -62,11 +72,19 @@
         {% include "partials/notice_card.html" %}
       {% endfor %}
     {% else %}
-      <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500">
-        <p class="text-sm font-semibold">Nenhum edital ativo encontrado com os filtros selecionados.</p>
-        <p class="text-xs text-slate-400 mt-1">Experimente remover os filtros ou faça uma consulta ao Assistente IA.</p>
+      <div class="col-span-full bento-card rounded-3xl p-14 text-center text-slate-500">
+        <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 mx-auto mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h3 class="text-base font-bold text-slate-900 mb-1">Nenhum edital encontrado com os filtros selecionados</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto">Experimente limpar os filtros ou tire sua dúvida diretamente com o Assistente Virtual IA.</p>
+        <a href="/chat" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-xs shadow-md shadow-sky-500/20">
+          <span>Consultar Assistente IA</span>
+          <span>&rarr;</span>
+        </a>
       </div>
     {% endif %}
   </div>
+
 </div>
 {% endblock %}

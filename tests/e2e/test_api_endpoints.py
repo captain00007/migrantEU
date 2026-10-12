@@ -24,3 +24,9 @@ class TestApiEndpoints:
         assert response.status_code == 200
         assert "Tem vestibular na UFPR?" in response.text
         assert "A UFPR oferece vestibular especial" in response.text
+
+    async def test_subscriber_registration_without_consent(self, async_client, mock_supabase):
+        data = {"email": "sem.consentimento@exemplo.org", "terms_consent": "false"}
+        response = await async_client.post("/api/subscribers", data=data)
+        assert response.status_code == 200
+        assert "Consentimento" in response.text

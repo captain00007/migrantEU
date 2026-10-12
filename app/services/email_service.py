@@ -5,7 +5,8 @@ from app.core.config import settings
 
 class EmailService:
     """
-    Serviço de envio de e-mails transacionais e em lote utilizando a API do Resend.
+    Serviço de envio de e-mails transacionais e em lote utilizando a API do Resend,
+    com suporte a links de descadastramento (opt-out LGPD) e disclaimers legais obrigatórios.
     """
     @classmethod
     def _init_resend(cls):
@@ -15,21 +16,35 @@ class EmailService:
     @classmethod
     async def send_welcome_email(cls, email: str, magic_token: str) -> bool:
         cls._init_resend()
+        confirmation_url = f"{settings.BASE_URL}/subscribers/confirm/{magic_token}"
+        unsubscribe_url = f"{settings.BASE_URL}/unsubscribe/{magic_token}"
+
         if not settings.RESEND_API_KEY:
-            print(f"[EMAIL SIMULAÇÃO] Boas-vindas para {email} com token {magic_token}")
+            print(f"[EMAIL SIMULAÇÃO] Boas-vindas para {email} com token {magic_token} (Opt-out: {unsubscribe_url})")
             return True
 
-        confirmation_url = f"{settings.BASE_URL}/subscribers/confirm/{magic_token}"
         html_content = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #1e3a8a;">Bem-vindo(a) ao migrantEU!</h2>
-            <p>Você se cadastrou para receber alertas oficiais sobre editais universitários (Cátedra Sérgio Vieira de Mello), cursos gratuitos de português (PLAC) e apoio humanitário no Brasil.</p>
-            <p style="margin: 30px 0;">
-                <a href="{confirmation_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #0284c7; margin: 0;">Bem-vindo(a) ao migrantEU!</h2>
+                <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Acolhimento & Oportunidades Acadêmicas</p>
+            </div>
+            <p style="color: #334155; line-height: 1.6; font-size: 14px;">
+                Você se cadastrou para receber alertas oficiais sobre editais universitários, vagas especiais, cursos gratuitos de português (PLAC) e redes de acolhimento no Brasil.
+            </p>
+            <p style="margin: 30px 0; text-align: center;">
+                <a href="{confirmation_url}" style="background-color: #0284c7; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
                     Confirmar Minha Inscrição
                 </a>
             </p>
-            <p style="font-size: 12px; color: #6b7280;">Se você não realizou esta inscrição, basta ignorar esta mensagem.</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+            <p style="font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
+                <strong>Aviso Legal & Isenção:</strong> O migrantEU é um agregador informativo independente, sem vínculo oficial com órgãos governamentais ou universidades. A leitura e conferência definitiva dos requisitos devem ocorrer no edital oficial de cada instituição.
+            </p>
+            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+                Se deseja deixar de receber nossos comunicados: 
+                <a href="{unsubscribe_url}" style="color: #0284c7; text-decoration: underline;">Cancelar inscrição / Deixar de receber alertas</a>
+            </p>
         </div>
         """
 
@@ -61,32 +76,45 @@ class EmailService:
         end_date = notice.get("end_date", "")
         notice_url = notice.get("notice_url", "")
 
-        html_content = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <div style="background-color: #eff6ff; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px;">
-                <strong style="color: #1e40af;">NOVO EDITAL OFICIAL APROVADO: {institution_name}</strong>
-            </div>
-            <h3 style="color: #111827;">{title}</h3>
-            <p style="color: #374151; line-height: 1.6;">{summary}</p>
-            <p><strong>Prazo limite de inscrição:</strong> {end_date}</p>
-            <p style="margin: 25px 0;">
-                <a href="{notice_url}" target="_blank" style="background-color: #059669; color: #ffffff; padding: 12px 22px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                    Acessar Edital Oficial
-                </a>
-            </p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-            <p style="font-size: 12px; color: #6b7280;">Você recebeu esta mensagem porque é assinante dos alertas da plataforma migrantEU.</p>
-        </div>
-        """
-
         sent_count = 0
         for sub in subscribers:
             email = sub.get("email")
+            magic_token = sub.get("magic_token", "")
             if not email:
                 continue
 
+            unsubscribe_url = f"{settings.BASE_URL}/unsubscribe/{magic_token}"
+
+            html_content = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong style="color: #0369a1; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        NOVO EDITAL OFICIAL DIVULGADO: {institution_name}
+                    </strong>
+                </div>
+                <h2 style="color: #0f172a; margin-top: 0; font-size: 20px;">{title}</h2>
+                <p style="color: #334155; line-height: 1.6; font-size: 14px;">{summary}</p>
+                <div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 10px 14px; margin: 20px 0; font-size: 13px; color: #475569;">
+                    <strong>Prazo limite de inscrições:</strong> <span style="color: #e11d48; font-weight: bold;">{end_date}</span>
+                </div>
+                <p style="margin: 25px 0; text-align: center;">
+                    <a href="{notice_url}" target="_blank" style="background-color: #0284c7; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                        Acessar Edital Oficial no Portal da Instituição &rarr;
+                    </a>
+                </p>
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+                <p style="font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
+                    <strong>Isenção de Responsabilidade (Disclaimer):</strong> O migrantEU é um agregador independente de informações públicas. A inscrição, envio de documentos e conferência de eventuais retificações ou mudanças de cronograma devem ocorrer obrigatoriamente no portal oficial da instituição responsável.
+                </p>
+                <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+                    Você está recebendo este e-mail porque se cadastrou no migrantEU.<br>
+                    <a href="{unsubscribe_url}" style="color: #0284c7; text-decoration: underline;">Cancelar inscrição / Deixar de receber alertas</a>
+                </p>
+            </div>
+            """
+
             if not settings.RESEND_API_KEY:
-                print(f"[SIMULAÇÃO BATCH EMAIL] Para: {email} | Edital: {title}")
+                print(f"[SIMULAÇÃO BATCH EMAIL] Para: {email} | Edital: {title} | Unsubscribe: {unsubscribe_url}")
                 sent_count += 1
                 continue
 

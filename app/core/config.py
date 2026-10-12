@@ -1,126 +1,123 @@
 import os
 from typing import Optional
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
+# Carrega o arquivo .env para as variáveis de ambiente
+load_dotenv(override=True)
+
+class Settings:
     # =========================================================================
     # Configurações Gerais do Servidor Web
     # =========================================================================
-    APP_NAME: str = "migrantEU"
-    APP_ENV: str = "development"
-    DEBUG: bool = True
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
-    SECRET_KEY: str = "migranteu-insecure-change-me-in-production-secret-token"
-    ALLOWED_HOSTS: str = "*"
-    BASE_URL: str = "http://localhost:8000"
+    APP_NAME: str = os.getenv("APP_NAME", "migrantEU")
+    APP_ENV: str = os.getenv("APP_ENV", "development")
+    DEBUG: bool = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
+    HOST: str = os.getenv("HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", "8000"))
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "migranteu-insecure-change-me-in-production-secret-token")
+    ALLOWED_HOSTS: str = os.getenv("ALLOWED_HOSTS", "*")
+    BASE_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
 
     # =========================================================================
     # Conexão com Supabase (Persistência, Auth e pgvector)
     # =========================================================================
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
-    SUPABASE_ANON_KEY: str = ""
-    SUPABASE_SERVICE_ROLE_KEY: str = ""
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
+    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
     # =========================================================================
     # Segurança de Sessão de Administração (Cookies)
     # =========================================================================
-    ADMIN_SESSION_COOKIE_NAME: str = "migranteu_admin_token"
-    ADMIN_SESSION_MAX_AGE_SECONDS: int = 86400  # 24 horas
+    ADMIN_SESSION_COOKIE_NAME: str = os.getenv("ADMIN_SESSION_COOKIE_NAME", "migranteu_admin_token")
+    ADMIN_SESSION_MAX_AGE_SECONDS: int = int(os.getenv("ADMIN_SESSION_MAX_AGE_SECONDS", "86400"))
 
     # =========================================================================
     # Limites de Listagem e Paginação de Editais
     # =========================================================================
-    HOME_NOTICES_LIMIT: int = 6
-    CATALOG_NOTICES_LIMIT: int = 50
+    HOME_NOTICES_LIMIT: int = int(os.getenv("HOME_NOTICES_LIMIT", "6"))
+    CATALOG_NOTICES_LIMIT: int = int(os.getenv("CATALOG_NOTICES_LIMIT", "50"))
 
     # =========================================================================
     # Agendador Diário (APScheduler)
     # =========================================================================
-    SCHEDULER_CRON_HOUR: int = 0
-    SCHEDULER_CRON_MINUTE: int = 5
+    SCHEDULER_CRON_HOUR: int = int(os.getenv("SCHEDULER_CRON_HOUR", "0"))
+    SCHEDULER_CRON_MINUTE: int = int(os.getenv("SCHEDULER_CRON_MINUTE", "5"))
 
     # =========================================================================
     # Robô de Coleta e Requisições HTTP
     # =========================================================================
-    BOT_USER_AGENT: str = "migrantEU-Bot/1.0 (+https://migranteu.org; Informações para Refugiados)"
-    HTTP_TIMEOUT_SECONDS: float = 12.0
+    BOT_USER_AGENT: str = os.getenv("BOT_USER_AGENT", "migrantEU-Bot/1.0 (+https://migranteu.org; Informações para Refugiados)")
+    HTTP_TIMEOUT_SECONDS: float = float(os.getenv("HTTP_TIMEOUT_SECONDS", "12.0"))
 
     # =========================================================================
     # Switches Principais de Inteligência Artificial
     # =========================================================================
-    AI_LLM_PROVIDER: str = "google"
-    AI_LLM_MODEL: str = "gemini-1.5-flash"
-    AI_EMBEDDING_PROVIDER: str = "google"
-    AI_EMBEDDING_MODEL: str = "models/text-embedding-004"
-    AI_EMBEDDING_DIMENSIONS: int = 768  # Dimensão unificada: 768 (Gemini, Ollama e OpenAI MRL)
+    AI_LLM_PROVIDER: str = os.getenv("AI_LLM_PROVIDER", "google")
+    AI_LLM_MODEL: str = os.getenv("AI_LLM_MODEL", "gemini-flash-latest")
+    AI_EMBEDDING_PROVIDER: str = os.getenv("AI_EMBEDDING_PROVIDER", "google")
+    AI_EMBEDDING_MODEL: str = os.getenv("AI_EMBEDDING_MODEL", "models/gemini-embedding-001")
+    AI_EMBEDDING_DIMENSIONS: int = int(os.getenv("AI_EMBEDDING_DIMENSIONS", "768"))
 
-    AI_TEMPERATURE: float = 0.2
-    AI_AGENT_MAX_ITERATIONS: int = 4
+    AI_TEMPERATURE: float = float(os.getenv("AI_TEMPERATURE", "0.2"))
+    AI_AGENT_MAX_ITERATIONS: int = int(os.getenv("AI_AGENT_MAX_ITERATIONS", "4"))
 
     # =========================================================================
     # Busca Vetorial e Semântica (pgvector)
     # =========================================================================
-    AI_VECTOR_THRESHOLD: float = 0.60
-    AI_VECTOR_LIMIT: int = 4
+    AI_VECTOR_THRESHOLD: float = float(os.getenv("AI_VECTOR_THRESHOLD", "0.60"))
+    AI_VECTOR_LIMIT: int = int(os.getenv("AI_VECTOR_LIMIT", "4"))
 
     # =========================================================================
     # Leitor de Editais em Tempo Real (Live Reader)
     # =========================================================================
-    AI_READER_MAX_CHARS: int = 4000
+    AI_READER_MAX_CHARS: int = int(os.getenv("AI_READER_MAX_CHARS", "4000"))
 
     # =========================================================================
     # Provedor: Google Gemini
     # =========================================================================
-    GEMINI_API_KEY: str = ""
-    GEMINI_LLM_MODEL: str = "gemini-1.5-flash"
-    GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_LLM_MODEL: str = os.getenv("GEMINI_LLM_MODEL", "gemini-flash-latest")
+    GEMINI_EMBEDDING_MODEL: str = os.getenv("GEMINI_EMBEDDING_MODEL", "models/gemini-embedding-001")
 
     # =========================================================================
     # Provedor: OpenAI
     # =========================================================================
-    OPENAI_API_KEY: str = ""
-    OPENAI_LLM_MODEL: str = "gpt-4o-mini"
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_LLM_MODEL: str = os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini")
+    OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
     # =========================================================================
     # Provedor: Ollama (100% Local)
     # =========================================================================
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_LLM_MODEL: str = "llama3:8b"
-    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_LLM_MODEL: str = os.getenv("OLLAMA_LLM_MODEL", "llama3:8b")
+    OLLAMA_EMBEDDING_MODEL: str = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 
     # =========================================================================
     # Busca Web Segura (Tavily)
     # =========================================================================
-    TAVILY_API_KEY: str = ""
-    AI_SEARCH_MAX_RESULTS: int = 3
-    AI_SEARCH_DEPTH: str = "advanced"
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
+    AI_SEARCH_MAX_RESULTS: int = int(os.getenv("AI_SEARCH_MAX_RESULTS", "3"))
+    AI_SEARCH_DEPTH: str = os.getenv("AI_SEARCH_DEPTH", "advanced")
 
     # =========================================================================
-    # Guardrail de Domínios (Domínios extras customizados separados por vírgula)
+    # Guardrail de Domínios
     # =========================================================================
-    DOMAIN_GUARD_CUSTOM_DOMAINS: str = ""
+    DOMAIN_GUARD_CUSTOM_DOMAINS: str = os.getenv("DOMAIN_GUARD_CUSTOM_DOMAINS", "")
 
     # =========================================================================
     # E-mails Transacionais (Resend)
     # =========================================================================
-    RESEND_API_KEY: str = ""
-    RESEND_FROM_EMAIL: str = "notificacoes@migranteu.org"
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    RESEND_FROM_EMAIL: str = os.getenv("RESEND_FROM_EMAIL", "notificacoes@migranteu.org")
 
     # =========================================================================
     # Observabilidade & Métricas (LangSmith)
     # =========================================================================
-    LANGCHAIN_TRACING_V2: bool = False
-    LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
-    LANGCHAIN_API_KEY: str = ""
-    LANGCHAIN_PROJECT: str = "migranteu"
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    LANGCHAIN_TRACING_V2: bool = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() in ("true", "1", "yes")
+    LANGCHAIN_ENDPOINT: str = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
+    LANGCHAIN_API_KEY: str = os.getenv("LANGCHAIN_API_KEY", "")
+    LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "migranteu")
 
 settings = Settings()

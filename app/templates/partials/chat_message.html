@@ -1,22 +1,40 @@
 <div class="flex gap-3 mb-4 chat-bubble-enter {% if role == 'user' %}justify-end{% else %}justify-start{% endif %}">
   {% if role != 'user' %}
-  <div class="w-8 h-8 rounded-full bg-brand-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+  <div
+    class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-black shadow-md shadow-sky-500/20">
     IA
   </div>
   {% endif %}
 
   <div class="max-w-[85%] md:max-w-[75%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm
     {% if role == 'user' %}
-      bg-brand-600 text-white rounded-br-none
+      bg-gradient-to-r from-sky-500 to-blue-600 text-white font-medium rounded-br-none
     {% else %}
-      bg-white text-slate-800 border border-slate-200/80 rounded-bl-none prose prose-sm prose-slate max-w-none
+      bg-slate-50 text-slate-800 border border-slate-200/80 rounded-bl-none shadow-sm
     {% endif %}">
-    {{ content | safe }}
+
+    {% if role != 'user' and intent %}
+    <div class="mb-3.5 pb-2.5 border-b border-slate-200/70 flex flex-wrap items-center justify-between gap-2">
+      <div
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ intent.badge_class }}">
+        <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+        <span>{{ intent.label }}</span>
+      </div>
+      {% if intent.action_link %}
+      <a href="{{ intent.action_link }}" target="_blank"
+        class="text-[11px] font-bold text-sky-600 hover:text-sky-800 hover:underline flex items-center gap-1">
+        <span>{{ intent.action_label }}</span>
+        <span>&rarr;</span>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="{% if role != 'user' %}prose prose-slate prose-sm max-w-none{% endif %}">
+      {{ content | safe }}
+    </div>
   </div>
 
   {% if role == 'user' %}
-  <div class="w-8 h-8 rounded-full bg-slate-300 flex-shrink-0 flex items-center justify-center text-slate-700 text-xs font-bold">
-    Você
-  </div>
   {% endif %}
 </div>

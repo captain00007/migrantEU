@@ -22,3 +22,19 @@ class TestWebRoutes:
         response = await async_client.get("/subscribers/confirm/meu-token-magico-123")
         assert response.status_code == 200
         assert "Inscrição Confirmada" in response.text
+
+    async def test_terms(self, async_client):
+        r = await async_client.get("/termos-de-uso")
+        assert r.status_code == 200
+
+    async def test_privacy(self, async_client):
+        r = await async_client.get("/privacidade")
+        assert r.status_code == 200
+
+    async def test_unsubscribe(self, async_client, mock_supabase):
+        r = await async_client.get("/unsubscribe/test-token")
+        assert r.status_code == 200
+
+    async def test_communities(self, async_client, mock_supabase):
+        r = await async_client.get("/comunidades")
+        assert r.status_code == 200

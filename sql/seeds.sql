@@ -75,3 +75,21 @@ INSERT INTO institutions (name, sigla, uf, city, website_url, official_domain, i
 ('Organização Internacional para as Migrações', 'OIM Brasil', 'DF', 'Brasília', 'https://brazil.iom.int', 'iom.int', true),
 ('Defensoria Pública da União', 'DPU', 'DF', 'Brasília', 'https://www.dpu.def.br', 'dpu.def.br', true)
 ON CONFLICT DO NOTHING;
+
+
+-- 4. Comunidades e Redes de Apoio Cultural/Migratório
+INSERT INTO communities (name, slug, nationality_or_origin, primary_language, uf, city, description, contact_email, whatsapp_group_url, website_or_social_url, is_verified, is_active) VALUES
+('Associação dos Haitianos de São Paulo (AHSP)', 'associacao-haitianos-sp', 'Haiti', 'Crioulo Haitiano / Francês', 'SP', 'São Paulo', 'Coletivo de acolhimento, orientação jurídica, tradução e integração para migrantes e refugiados haitianos.', 'contato@haitianossp.org', 'https://chat.whatsapp.com/exemplo-haitianos-sp', 'https://instagram.com/haitianos_sp', true, true),
+
+('União da Comunidade Haitiana de Curitiba e RMC', 'comunidade-haitiana-curitiba', 'Haiti', 'Crioulo Haitiano', 'PR', 'Curitiba', 'Rede de apoio mútuo comunitário, suporte na busca de vagas de emprego, aulas de português e documentação.', 'haitianoscuritiba@gmail.com', 'https://chat.whatsapp.com/exemplo-haitianos-cwb', 'https://facebook.com/haitianoscuritiba', true, true),
+
+('Rede de Acolhimento e Integração Venezuelana (RAIV)', 'rede-venezuelanos-brasil', 'Venezuela', 'Espanhol', 'RR', 'Boa Vista', 'Apoio a migrantes venezuelanos na regularização documental, interiorização, moradia e oportunidades de estudo.', 'contato@raiv.org.br', 'https://chat.whatsapp.com/exemplo-venezuelanos-rr', 'https://instagram.com/venezuelanos_brasil', true, true),
+
+('Coletivo Indígena Warao de Apoio Mútuo', 'coletivo-indigena-warao', 'Venezuela (Indígena)', 'Warao / Espanhol', 'AM', 'Manaus', 'Organização de lideranças indígenas Warao promovendo preservação cultural, saúde e garantia de direitos.', 'warao.brasil@gmail.com', NULL, 'https://instagram.com/coletivo_warao', true, true),
+
+('Coletivo da Diáspora Congolesa e Refugiados Africanos', 'coletivo-congo-africa-sp', 'República Democrática do Congo', 'Francês / Lingala', 'SP', 'São Paulo', 'Espaço de acolhimento, suporte a requerentes de refúgio africanos, valorização cultural e apoio comunitário.', 'diasporacongobr@gmail.com', 'https://chat.whatsapp.com/exemplo-congo-sp', 'https://instagram.com/diaspora_africana_sp', true, true),
+
+('Comunidade de Acolhida Humanitária Afegã no Brasil', 'comunidade-afega-brasil', 'Afeganistão', 'Dari / Pashto / Inglês', 'SP', 'Guarulhos', 'Rede solidária de recepção e integração de famílias afegãs com visto humanitário, aulas de língua portuguesa e acolhimento.', 'afegaos.brasil@gmail.com', 'https://chat.whatsapp.com/exemplo-afegaos-br', 'https://instagram.com/afegaos_brasil', true, true),
+
+('Rede de Apoio a Refugiados Sírios e Médio Oriente', 'refugiados-sirios-brasil', 'Síria', 'Árabe', 'SP', 'São Paulo', 'Apoio a famílias refugiadas da Síria e de países árabes na revalidação de diplomas, moradia e integração cultural.', 'siriosbrasil@gmail.com', NULL, 'https://instagram.com/sirios_brasil', true, true)
+ON CONFLICT (slug) DO NOTHING;

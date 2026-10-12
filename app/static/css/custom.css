@@ -1,24 +1,125 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+/* Fundo Geral Azul Branco / Ice Blue */
+body {
+  background-color: #f3f7fc !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(224, 242, 254, 0.75) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(219, 234, 254, 0.65) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(240, 249, 255, 0.85) 0px, transparent 50%) !important;
+  background-attachment: fixed;
+  color: #1e293b;
 }
 
-.dark .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.8);
+/* Grid sutil de micro-pontos para tema azul-branco */
+.bg-tech-grid {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.28) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
-/* Custom scrollbar */
+/* Efeito de Auras Radiais Suaves */
+.aura-glow-cyan {
+  background: radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.12) 0%, rgba(243, 247, 252, 0) 70%);
+}
+
+.aura-glow-blue {
+  background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.10) 0%, rgba(243, 247, 252, 0) 70%);
+}
+
+/* Glassmorphism Azul-Branco */
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+}
+
+/* Bento Card 100% Branco Puro e Luminoso (Zero Cinza) */
+.bento-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 18px -4px rgba(15, 23, 42, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.bento-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.4), transparent);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(14, 165, 233, 0.5) !important;
+  box-shadow: 0 16px 36px -8px rgba(14, 165, 233, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+}
+
+.bento-card:hover::before {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.9), transparent);
+}
+
+/* Floating Bottom Dock (Azul-Branco) */
+.tk-dock {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(203, 213, 225, 0.9) !important;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15), 0 0 25px rgba(14, 165, 233, 0.15);
+  border-radius: 9999px;
+  padding: 0.5rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 95vw;
+}
+
+/* Equalizer / Glowing Light Bars no Rodapé */
+.tk-glow-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 80px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  opacity: 0.6;
+}
+
+.tk-glow-wrapper .bar {
+  width: 3px;
+  margin: 0 10px;
+  border-radius: 9999px;
+  background: linear-gradient(0deg, rgba(14, 165, 233, 0.95) 0%, rgba(59, 130, 246, 0.3) 70%, transparent 100%);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.8);
+  animation: glowEqualizer 3s ease-in-out infinite alternate;
+}
+
+@keyframes glowEqualizer {
+  0% { transform: scaleY(0.4); opacity: 0.5; }
+  50% { transform: scaleY(0.95); opacity: 1; }
+  100% { transform: scaleY(0.6); opacity: 0.7; }
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
