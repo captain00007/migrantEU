@@ -2,14 +2,12 @@
   <div>
     <div class="flex items-center justify-between gap-2 mb-3">
       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
-        {% if notice.category == 'ensino_superior' %}bg-blue-100 text-blue-800
-        {% elif notice.category == 'curso_portugues' %}bg-emerald-100 text-emerald-800
-        {% elif notice.category == 'pos_graduacao' %}bg-purple-100 text-purple-800
-        {% else %}bg-amber-100 text-amber-800{% endif %}">
-        {% if notice.category == 'ensino_superior' %}Ensino Superior
-        {% elif notice.category == 'curso_portugues' %}Português (PLAC)
-        {% elif notice.category == 'pos_graduacao' %}Pós-Graduação
-        {% else %}Acolhimento Social{% endif %}
+        {% if notice.category_badge_color == 'emerald' or notice.category == 'curso_portugues' %}bg-emerald-100 text-emerald-800
+        {% elif notice.category_badge_color == 'purple' or notice.category == 'pos_graduacao' %}bg-purple-100 text-purple-800
+        {% elif notice.category_badge_color == 'amber' or notice.category == 'acolhimento_social' %}bg-amber-100 text-amber-800
+        {% elif notice.category_badge_color == 'indigo' or notice.category == 'revalidacao_diploma' %}bg-indigo-100 text-indigo-800
+        {% else %}bg-blue-100 text-blue-800{% endif %}">
+        {{ notice.category_name or notice.category or 'Oportunidade' }}
       </span>
       <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
         {{ notice.institution_uf or 'BR' }}

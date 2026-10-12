@@ -36,9 +36,9 @@ async def safe_web_search_tool(query: str, institution_domain: Optional[str] = N
     try:
         response = client.search(
             query=search_query,
-            search_depth="advanced",
+            search_depth=settings.AI_SEARCH_DEPTH,
             include_domains=domains,
-            max_results=3
+            max_results=settings.AI_SEARCH_MAX_RESULTS
         )
         filtered = []
         for r in response.get("results", []):

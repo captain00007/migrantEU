@@ -6,16 +6,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
--- 1. Criação de tipos enumerados
-DO $$ BEGIN
-    CREATE TYPE notice_category AS ENUM (
-        'ensino_superior',
-        'curso_portugues',
-        'acolhimento_social',
-        'pos_graduacao'
-    );
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
+-- 1. Criação de tipos enumerados de status
 DO $$ BEGIN
     CREATE TYPE notice_status AS ENUM (
         'pendente_aprovacao',
@@ -24,30 +15,24 @@ DO $$ BEGIN
     );
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM (
-        'admin',
-        'moderador'
-    );
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
--- 2. Tabela de Usuários do Sistema (Backoffice / Operadores / Administradores)
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) NOT NULL UNIQUE,
-    hashed_password VARCHAR(255) NOT NULL,
-    full_name VARCHAR(150) NOT NULL,
-    role user_role NOT NULL DEFAULT 'moderador',
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
-);
-
--- 3. Tabela de Configurações Dinâmicas do Sistema (Troca de modelos em runtime)
+-- 2. Tabela de Configurações Dinâmicas do Sistema (Troca de modelos em runtime)
+-- Os usuários administrativos são gerenciados diretamente pelo Supabase Auth (auth.users)
 CREATE TABLE IF NOT EXISTS system_settings (
     key VARCHAR(100) PRIMARY KEY,
     value JSONB NOT NULL,
-    updated_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- 3. Tabela de Categorias Dinâmicas de Oportunidades
+CREATE TABLE IF NOT EXISTS categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slug VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    badge_color VARCHAR(30) DEFAULT 'blue',
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
@@ -65,11 +50,11 @@ CREATE TABLE IF NOT EXISTS institutions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 5. Tabela de Editais e Oportunidades com Vetor de 768 dimensões
+-- 5. Tabela de Editais e Oportunidades com Chave Estrangeira category_id e Vetor 768d
 CREATE TABLE IF NOT EXISTS notices (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     institution_id UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
-    category notice_category NOT NULL,
+    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
     title VARCHAR(300) NOT NULL,
     notice_url TEXT NOT NULL,
     start_date DATE,
@@ -81,7 +66,7 @@ CREATE TABLE IF NOT EXISTS notices (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 6. Tabela de Assinantes por E-mail
+-- 6. Tabela de Assinantes por E-mail (Usuários Finais - Sem Senha)
 CREATE TABLE IF NOT EXISTS subscribers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -95,14 +80,20 @@ CREATE TABLE IF NOT EXISTS subscribers (
 
 -- 7. Índices de Otimização e Cache
 CREATE INDEX IF NOT EXISTS idx_notices_cache_lookup 
-ON notices (institution_id, category, status, end_date);
+ON notices (institution_id, category_id, status, end_date);
 
 CREATE INDEX IF NOT EXISTS idx_notices_aprovados_vigentes 
-ON notices (category, end_date) 
+ON notices (category_id, end_date) 
 WHERE status = 'aprovado_vigente';
 
 CREATE INDEX IF NOT EXISTS idx_notices_institution_id 
 ON notices (institution_id);
+
+CREATE INDEX IF NOT EXISTS idx_notices_category_id 
+ON notices (category_id);
+
+CREATE INDEX IF NOT EXISTS idx_categories_slug 
+ON categories (slug);
 
 CREATE INDEX IF NOT EXISTS idx_institutions_official_domain 
 ON institutions (official_domain);
@@ -125,9 +116,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS set_timestamp_users ON users;
-CREATE TRIGGER set_timestamp_users
-BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+DROP TRIGGER IF EXISTS set_timestamp_categories ON categories;
+CREATE TRIGGER set_timestamp_categories
+BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
 
 DROP TRIGGER IF EXISTS set_timestamp_institutions ON institutions;
 CREATE TRIGGER set_timestamp_institutions
@@ -141,18 +132,21 @@ DROP TRIGGER IF EXISTS set_timestamp_subscribers ON subscribers;
 CREATE TRIGGER set_timestamp_subscribers
 BEFORE UPDATE ON subscribers FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
 
--- 9. RPC para busca semântica no Supabase (768 dimensões)
+-- 9. RPC para busca semântica no Supabase (768 dimensões com join em categories)
 CREATE OR REPLACE FUNCTION match_notices (
   query_embedding vector(768),
   match_threshold float DEFAULT 0.60,
   match_count int DEFAULT 5,
-  filter_category notice_category DEFAULT NULL
+  filter_category_id UUID DEFAULT NULL,
+  filter_category_slug VARCHAR DEFAULT NULL
 )
 RETURNS TABLE (
   id UUID,
   institution_id UUID,
   institution_name VARCHAR,
-  category notice_category,
+  category_id UUID,
+  category_slug VARCHAR,
+  category_name VARCHAR,
   title VARCHAR,
   notice_url TEXT,
   start_date DATE,
@@ -168,7 +162,9 @@ BEGIN
     n.id,
     n.institution_id,
     i.name AS institution_name,
-    n.category,
+    n.category_id,
+    c.slug AS category_slug,
+    c.name AS category_name,
     n.title,
     n.notice_url,
     n.start_date,
@@ -177,9 +173,11 @@ BEGIN
     1 - (n.embedding <=> query_embedding) AS similarity
   FROM notices n
   JOIN institutions i ON n.institution_id = i.id
+  JOIN categories c ON n.category_id = c.id
   WHERE n.status = 'aprovado_vigente'
     AND n.end_date >= CURRENT_DATE
-    AND (filter_category IS NULL OR n.category = filter_category)
+    AND (filter_category_id IS NULL OR n.category_id = filter_category_id)
+    AND (filter_category_slug IS NULL OR c.slug = filter_category_slug)
     AND 1 - (n.embedding <=> query_embedding) > match_threshold
   ORDER BY n.embedding <=> query_embedding
   LIMIT match_count;

@@ -16,10 +16,17 @@
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoria:</label>
         <select name="categoria" onchange="this.form.requestSubmit()" class="w-full text-sm rounded-xl border border-slate-200 p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
           <option value="" {% if not active_category %}selected{% endif %}>Todas as Categorias</option>
-          <option value="ensino_superior" {% if active_category == 'ensino_superior' %}selected{% endif %}>Ensino Superior (Graduação)</option>
-          <option value="curso_portugues" {% if active_category == 'curso_portugues' %}selected{% endif %}>Cursos de Português (PLAC)</option>
-          <option value="acolhimento_social" {% if active_category == 'acolhimento_social' %}selected{% endif %}>Acolhimento Social / Jurídico</option>
-          <option value="pos_graduacao" {% if active_category == 'pos_graduacao' %}selected{% endif %}>Pós-Graduação (Mestrado/Doutorado)</option>
+          {% if categories %}
+            {% for cat in categories %}
+              <option value="{{ cat.slug }}" {% if active_category == cat.slug or active_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          {% else %}
+            <option value="ensino_superior" {% if active_category == 'ensino_superior' %}selected{% endif %}>Ensino Superior (Graduação)</option>
+            <option value="curso_portugues" {% if active_category == 'curso_portugues' %}selected{% endif %}>Cursos de Português (PLAC)</option>
+            <option value="pos_graduacao" {% if active_category == 'pos_graduacao' %}selected{% endif %}>Pós-Graduação (Mestrado/Doutorado)</option>
+            <option value="acolhimento_social" {% if active_category == 'acolhimento_social' %}selected{% endif %}>Acolhimento e Apoio Jurídico</option>
+            <option value="revalidacao_diploma" {% if active_category == 'revalidacao_diploma' %}selected{% endif %}>Revalidação de Diplomas</option>
+          {% endif %}
         </select>
       </div>
 
@@ -33,6 +40,12 @@
           <option value="SC" {% if active_uf == 'SC' %}selected{% endif %}>Santa Catarina (SC)</option>
           <option value="DF" {% if active_uf == 'DF' %}selected{% endif %}>Distrito Federal (DF)</option>
           <option value="RJ" {% if active_uf == 'RJ' %}selected{% endif %}>Rio de Janeiro (RJ)</option>
+          <option value="MG" {% if active_uf == 'MG' %}selected{% endif %}>Minas Gerais (MG)</option>
+          <option value="BA" {% if active_uf == 'BA' %}selected{% endif %}>Bahia (BA)</option>
+          <option value="GO" {% if active_uf == 'GO' %}selected{% endif %}>Goiás (GO)</option>
+          <option value="AM" {% if active_uf == 'AM' %}selected{% endif %}>Amazonas (AM)</option>
+          <option value="RR" {% if active_uf == 'RR' %}selected{% endif %}>Roraima (RR)</option>
+          <option value="PA" {% if active_uf == 'PA' %}selected{% endif %}>Pará (PA)</option>
         </select>
       </div>
 

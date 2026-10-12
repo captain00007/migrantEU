@@ -3,17 +3,23 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.services.notice_service import NoticeService
 from app.core.database import SupabaseService
+from app.core.config import settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
-    notices = await NoticeService.list_active_notices(limit=6)
-    return templates.TemplateResponse("pages/index.html", {
-        "request": request,
-        "notices": notices
-    })
+    notices = await NoticeService.list_active_notices(limit=settings.HOME_NOTICES_LIMIT)
+    categories = await NoticeService.list_categories()
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/index.html",
+        context={
+            "notices": notices,
+            "categories": categories
+        }
+    )
 
 @router.get("/editais", response_class=HTMLResponse)
 async def notices_page(
@@ -21,19 +27,26 @@ async def notices_page(
     categoria: str | None = Query(None),
     uf: str | None = Query(None)
 ):
-    notices = await NoticeService.list_active_notices(category=categoria, uf=uf, limit=50)
-    return templates.TemplateResponse("pages/notices.html", {
-        "request": request,
-        "notices": notices,
-        "active_category": categoria,
-        "active_uf": uf
-    })
+    notices = await NoticeService.list_active_notices(category=categoria, uf=uf, limit=settings.CATALOG_NOTICES_LIMIT)
+    categories = await NoticeService.list_categories()
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/notices.html",
+        context={
+            "notices": notices,
+            "categories": categories,
+            "active_category": categoria,
+            "active_uf": uf
+        }
+    )
 
 @router.get("/chat", response_class=HTMLResponse)
 async def chat_page(request: Request):
-    return templates.TemplateResponse("pages/chat.html", {
-        "request": request
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/chat.html",
+        context={}
+    )
 
 @router.get("/subscribers/confirm/{magic_token}", response_class=HTMLResponse)
 async def confirm_subscription(request: Request, magic_token: str):

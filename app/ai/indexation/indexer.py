@@ -14,9 +14,16 @@ class NoticeIndexer:
         embeddings_model = EmbeddingsFactory.get_embeddings()
         vector = await embeddings_model.aembed_query(text_to_embed)
 
+        category_id = notice_data.get("category_id")
+        if not category_id and notice_data.get("category"):
+            cat_slug = notice_data["category"]
+            cat_res = await SupabaseService.table_select("categories", lambda q: q.select("id").eq("slug", cat_slug).limit(1))
+            if cat_res.data:
+                category_id = cat_res.data[0]["id"]
+
         payload = {
             "institution_id": notice_data["institution_id"],
-            "category": notice_data["category"],
+            "category_id": category_id,
             "title": notice_data["title"],
             "notice_url": notice_data["notice_url"],
             "start_date": notice_data.get("start_date"),

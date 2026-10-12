@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
+from app.core.config import settings
 from app.ai.loader.web_loader import WebLoader
 from app.ai.loader.pdf_loader import PDFLoader
 from app.ai.cleaners.text_cleaner import TextCleaner
@@ -22,7 +23,8 @@ async def live_url_reader_tool(url: str, question: str) -> str:
             text = TextCleaner.clean_html(html)
 
         cleaned = TextCleaner.clean_text(text)
-        preview = cleaned[:4000] if len(cleaned) > 4000 else cleaned
+        max_chars = settings.AI_READER_MAX_CHARS
+        preview = cleaned[:max_chars] if len(cleaned) > max_chars else cleaned
         header = f"Trecho extraído do edital ({url}) para responder sobre '{question}':"
         return f"{header}\n\n{preview}"
     except Exception as e:

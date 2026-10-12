@@ -1,29 +1,27 @@
-from passlib.context import CryptContext
-from datetime import datetime, timedelta, timezone
-from jose import jwt
-from app.core.config import settings
+from typing import Optional, Dict, Any
+from app.core.database import SupabaseService
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(hours=24)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
-    return encoded_jwt
-
-def decode_access_token(token: str) -> dict | None:
+async def verify_supabase_admin_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Valida o token JWT de sessão junto ao Supabase Auth e extrai dados
+    de identificação e papel (role) do operador.
+    """
+    if not token:
+        return None
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        return payload
+        res = await SupabaseService.auth_get_user(token)
+        if not res or not res.user:
+            return None
+
+        user = res.user
+        metadata = user.user_metadata or {}
+        role = metadata.get("role", "admin")  # Padrão admin caso não especificado no cadastro
+
+        return {
+            "id": user.id,
+            "email": user.email,
+            "role": role,
+            "full_name": metadata.get("full_name", user.email.split("@")[0])
+        }
     except Exception:
         return None

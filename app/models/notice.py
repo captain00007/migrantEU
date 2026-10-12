@@ -4,7 +4,11 @@ from datetime import date, datetime
 
 class NoticeBase(BaseModel):
     institution_id: str
-    category: str  # ensino_superior, curso_portugues, acolhimento_social, pos_graduacao
+    category_id: Optional[str] = None
+    category: Optional[str] = None  # Slug para compatibilidade
+    category_slug: Optional[str] = None
+    category_name: Optional[str] = None
+    category_badge_color: Optional[str] = None
     title: str
     notice_url: str
     start_date: Optional[date] = None
