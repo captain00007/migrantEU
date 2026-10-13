@@ -16,7 +16,7 @@ class TestWebRoutes:
     async def test_chat_page_returns_200(self, async_client):
         response = await async_client.get("/chat")
         assert response.status_code == 200
-        assert "Assistente migrantEU" in response.text
+        assert "Assistente" in response.text and "migrantEU" in response.text
 
     async def test_confirm_subscription_magic_link(self, async_client, mock_supabase):
         response = await async_client.get("/subscribers/confirm/meu-token-magico-123")

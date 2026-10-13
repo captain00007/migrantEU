@@ -9,6 +9,7 @@ from app.ai.prompts.specialized import (
     PROMPT_CURSO_PORTUGUES,
     PROMPT_DOCUMENTACAO_REFUGIO,
     PROMPT_COMUNIDADES,
+    PROMPT_FORA_DE_ESCOPO,
     PROMPTS_BY_INTENT,
     get_prompt_for_intent,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "PROMPT_CURSO_PORTUGUES",
     "PROMPT_DOCUMENTACAO_REFUGIO",
     "PROMPT_COMUNIDADES",
+    "PROMPT_FORA_DE_ESCOPO",
     "PROMPTS_BY_INTENT",
     "get_prompt_for_intent",
 ]

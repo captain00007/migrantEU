@@ -16,6 +16,8 @@ from app.ai.tools.safe_search import safe_web_search_tool
 from app.ai.tools.live_reader import live_url_reader_tool
 from app.ai.tools.check_communities import search_communities_tool
 from app.ai.guardrails.safety_guard import SafetyGuard
+from app.ai.guardrails.scope_guard import ScopeGuard
+from app.ai.guardrails.context_shield import ContextShield
 
 def _extract_text(output: Any) -> str:
     """Extrai texto limpo independentemente do formato retornado pelo LLM (string ou blocos)."""
@@ -35,24 +37,65 @@ def _extract_text(output: Any) -> str:
         return output.strip()
     return str(output).strip()
 
+def detect_user_language(text: str) -> str:
+    """Identifica o idioma predominante do texto para recusas e acolhimentos empáticos."""
+    lowered = (text or "").lower()
+    if any(w in lowered for w in ["hola", "gracias", "por favor", "¿", "necesito", "ayuda", "universidad", "refugio", "estudiar"]):
+        return "es"
+    if any(w in lowered for w in ["bonjour", "merci", "s'il vous plaît", "comment", "je ", "aide", "université", "asile"]):
+        return "fr"
+    if any(w in lowered for w in ["hello", "hi ", "thanks", "please", "help", "university", "asylum", "refugee", "how to"]):
+        return "en"
+    return "pt"
+
+def get_tools_for_intent(intent_key: str | None = None) -> list:
+    """
+    Retorna apenas as ferramentas necessárias para a intenção detectada,
+    evitando poluir a assinatura do modelo com chamadas irrelevantes.
+    """
+    key = (intent_key or "").strip().lower()
+    if key in ["ensino_superior", "curso_portugues"]:
+        # Foco em consulta de editais e busca oficial
+        return [
+            check_cached_notices_tool,
+            safe_web_search_tool,
+            live_url_reader_tool
+        ]
+    elif key == "comunidades":
+        # Foco em consulta de associações comunitárias
+        return [
+            search_communities_tool,
+            safe_web_search_tool,
+            live_url_reader_tool
+        ]
+    elif key == "documentacao_refugio":
+        # Foco em busca oficial governamental (Sisconare/PF/DPU)
+        return [
+            safe_web_search_tool,
+            live_url_reader_tool
+        ]
+    else:
+        # Orientação geral de acolhimento: disponibiliza o leque completo
+        return [
+            check_cached_notices_tool,
+            search_communities_tool,
+            safe_web_search_tool,
+            live_url_reader_tool
+        ]
+
 def get_migranteu_agent(
     intent_key: str | None = None,
     provider: str | None = None,
     model: str | None = None
 ) -> AgentExecutor:
     """
-    Constrói o agente LangChain integrado às ferramentas com o prompt especializado para a intenção do usuário.
-    Evita prompts monolíticos genéricos, aplicando instruções direcionadas para cada tema.
+    Constrói o agente LangChain integrado estritamente com as ferramentas e com o
+    prompt específico da intenção do usuário, evitando prompts monolíticos.
     """
-    tools = [
-        check_cached_notices_tool,
-        safe_web_search_tool,
-        live_url_reader_tool,
-        search_communities_tool
-    ]
+    tools = get_tools_for_intent(intent_key)
     llm = LLMFactory.get_llm(provider=provider, model=model, temperature=settings.AI_TEMPERATURE)
 
-    # Seleciona o prompt específico da intenção
+    # Carrega exclusivamente o prompt do domínio solicitado (sem empilhar todos os eixos)
     system_prompt = get_prompt_for_intent(intent_key)
 
     prompt = ChatPromptTemplate.from_messages([
@@ -80,10 +123,15 @@ async def process_chat_message(
     return_intent: bool = False
 ) -> Union[str, Tuple[str, Dict[str, Any]]]:
     """
-    Processa uma mensagem do usuário:
-    1. Detecta a intenção semântica com um LLM ágil especializado (Google Gemini / OpenAI).
-    2. Seleciona o prompt adequado e focado no tema específico.
-    3. Executa o agente LangChain com fallback automático resiliente.
+    Processa a mensagem do usuário com pipeline em duas etapas:
+    1. O primeiro LLM (rápido) identifica a intenção semântica.
+    2. Avaliação de continuidade:
+       - Se for fora de escopo (ou tema sem ameaça de acolhimento), encerra imediatamente
+         com recusa acolhedora no idioma do usuário, economizando chamadas e ferramentas.
+    3. Se dentro do escopo:
+       - Encapsula a pergunta do usuário com ContextShield (XML/CDATA) para separar dados de instruções.
+       - Seleciona o prompt específico daquele tema (ex: ensino superior OU comunidades).
+       - Dispara o agente LangChain com ferramentas específicas.
     """
     sanitized_input = SafetyGuard.sanitize_input(user_input)
     formatted_history: List[BaseMessage] = []
@@ -99,7 +147,7 @@ async def process_chat_message(
     active_provider = provider or settings.AI_LLM_PROVIDER
     active_model = model or settings.AI_LLM_MODEL
 
-    # Passo 1: Detecta a intenção com LLM pequeno especializado
+    # Etapa 1: Primeiro LLM ágil descobre a intenção do usuário
     intent_data = await IntentClassifier.detect_intent(
         prompt=sanitized_input,
         provider=active_provider,
@@ -107,9 +155,20 @@ async def process_chat_message(
     )
     intent_key = intent_data.get("key", "geral_acolhimento")
 
+    # Etapa 2: Verifica se precisa continuar
+    # Se a intenção for fora de escopo, não é necessário continuar para o segundo LLM com ferramentas
+    if ScopeGuard.is_out_of_scope(intent_key):
+        user_lang = detect_user_language(sanitized_input)
+        refusal_msg = ScopeGuard.get_fallback_refusal(user_lang)
+        if return_intent:
+            return refusal_msg, intent_data
+        return refusal_msg
+
     output_reply = ""
 
-    # Passo 2: Executa o agente com o prompt especializado correspondente à intenção
+    # Etapa 3: Continua para o segundo LLM com ContextShield (Data vs. Instructions)
+    shielded_input = ContextShield.format_user_query(sanitized_input)
+
     try:
         executor = get_migranteu_agent(
             intent_key=intent_key,
@@ -117,14 +176,14 @@ async def process_chat_message(
             model=active_model
         )
         response = await executor.ainvoke({
-            'input': sanitized_input,
+            'input': shielded_input,
             'chat_history': formatted_history
         })
         output_reply = _extract_text(response.get('output', ''))
     except Exception as primary_err:
         print(f'[IA AVISO] Falha com {active_provider}/{active_model}: {primary_err}')
         
-        # Fallback inteligente entre OpenAI e Gemini mantendo o mesmo prompt especializado
+        # Fallback inteligente entre OpenAI e Gemini mantendo o mesmo prompt modular
         fallback_provider = 'openai' if (active_provider or '').lower() in ['google', 'gemini'] else 'google'
         fallback_model = getattr(settings, 'OPENAI_LLM_MODEL', 'gpt-4o-mini') if fallback_provider == 'openai' else getattr(settings, 'GEMINI_LLM_MODEL', 'gemini-flash-latest')
         has_key = bool(settings.OPENAI_API_KEY) if fallback_provider == 'openai' else bool(settings.GEMINI_API_KEY)
@@ -138,7 +197,7 @@ async def process_chat_message(
                     model=fallback_model
                 )
                 response = await fallback_executor.ainvoke({
-                    'input': sanitized_input,
+                    'input': shielded_input,
                     'chat_history': formatted_history
                 })
                 output_reply = _extract_text(response.get('output', ''))

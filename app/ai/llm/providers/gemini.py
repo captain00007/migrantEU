@@ -10,7 +10,8 @@ class GeminiLLMProvider(BaseLLMProvider):
         return ChatGoogleGenerativeAI(
             model=model,
             google_api_key=settings.GEMINI_API_KEY,
-            temperature=temperature
+            temperature=temperature,
+            max_retries=1
         )
 
 class GeminiEmbeddingsProvider(BaseEmbeddingsProvider):

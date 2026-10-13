@@ -1,7 +1,7 @@
 """
 Módulo de identificação de intenção do usuário via LLM para a plataforma migrantEU.
 Utiliza um modelo de linguagem ágil e especializado para determinar o eixo temático da mensagem,
-permitindo acionar o prompt adequado e especializado.
+permitindo acionar o prompt adequado e especializado, com suporte a detecção de fora de escopo.
 """
 
 from typing import Dict, Any, Optional
@@ -43,20 +43,28 @@ INTENTS_MAP: Dict[str, Dict[str, Any]] = {
         "badge_class": "bg-slate-100 text-slate-700 border-slate-300",
         "action_label": "Explorar Oportunidades",
         "action_link": "/editais"
+    },
+    "fora_de_escopo": {
+        "key": "fora_de_escopo",
+        "label": "🛡️ Orientação sobre o Escopo migrantEU",
+        "badge_class": "bg-slate-100 text-slate-600 border-slate-300",
+        "action_label": "Ver Serviços da Plataforma",
+        "action_link": "/editais"
     }
 }
 
-CLASSIFICATION_PROMPT_TEMPLATE = """Você é um classificador de intenções da plataforma migrantEU.
-Classifique a mensagem do usuário (que pode estar em qualquer idioma, como português, espanhol, francês, inglês, crioulo haitiano ou árabe) em EXATAMENTE UMA destas 5 opções:
+CLASSIFICATION_PROMPT_TEMPLATE = """Você é um classificador semântico de intenções da plataforma humanitária e educacional migrantEU.
+Classifique a mensagem do usuário (que pode estar em qualquer idioma, como português, espanhol, francês, inglês, crioulo haitiano ou árabe) em EXATAMENTE UMA destas 6 opções:
 - ensino_superior (vestibulares, faculdade, graduação, pós-graduação, mestrado, revalidação de diplomas, cotas acadêmicas)
 - curso_portugues (cursos de português como língua de acolhimento - PLAC, aulas de língua, Celpe-Bras, aprender português)
 - documentacao_refugio (solicitação de refúgio, asilo, CONARE, Polícia Federal, agendamento, CRNM, RNF, CPF, defensoria pública DPU, visto)
 - comunidades (associações de imigrantes, coletivos por nacionalidade como venezuelanos, haitianos, afegãos, sírios, redes de apoio social)
-- geral_acolhimento (saudações, agradecimentos, dúvidas amplas ou quando não se enquadrar nas opções anteriores)
+- geral_acolhimento (saudações amigáveis como 'olá', agradecimentos, pedidos de ajuda geral voltados a migrantes ou dúvidas sobre o funcionamento da plataforma)
+- fora_de_escopo (qualquer assunto alheio ao acolhimento e direitos de migrantes no Brasil, como esportes, futebol, atletas, celebridades, receitas, cultura pop, filmes, fofocas, piadas, programação geral ou conversas aleatórias descontextualizadas)
 
 Mensagem do Usuário: "{message}"
 
-Responda APENAS com a chave correspondente (ensino_superior, curso_portugues, documentacao_refugio, comunidades ou geral_acolhimento) em minúsculas, sem pontuação, sem aspas e sem explicações adicionais."""
+Responda APENAS com a chave correspondente (ensino_superior, curso_portugues, documentacao_refugio, comunidades, geral_acolhimento ou fora_de_escopo) em minúsculas, sem pontuação, sem aspas e sem explicações adicionais."""
 
 
 class IntentClassifier:

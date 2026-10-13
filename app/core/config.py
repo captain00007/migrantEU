@@ -53,10 +53,10 @@ class Settings:
     # =========================================================================
     # Switches Principais de Inteligência Artificial
     # =========================================================================
-    AI_LLM_PROVIDER: str = os.getenv("AI_LLM_PROVIDER", "google")
-    AI_LLM_MODEL: str = os.getenv("AI_LLM_MODEL", "gemini-flash-latest")
-    AI_EMBEDDING_PROVIDER: str = os.getenv("AI_EMBEDDING_PROVIDER", "google")
-    AI_EMBEDDING_MODEL: str = os.getenv("AI_EMBEDDING_MODEL", "models/gemini-embedding-001")
+    AI_LLM_PROVIDER: str = os.getenv("AI_LLM_PROVIDER", "openai")
+    AI_LLM_MODEL: str = os.getenv("AI_LLM_MODEL", "gpt-4o-mini")
+    AI_EMBEDDING_PROVIDER: str = os.getenv("AI_EMBEDDING_PROVIDER", "openai")
+    AI_EMBEDDING_MODEL: str = os.getenv("AI_EMBEDDING_MODEL", "text-embedding-3-small")
     AI_EMBEDDING_DIMENSIONS: int = int(os.getenv("AI_EMBEDDING_DIMENSIONS", "768"))
 
     AI_TEMPERATURE: float = float(os.getenv("AI_TEMPERATURE", "0.2"))
@@ -118,6 +118,14 @@ class Settings:
     LANGCHAIN_TRACING_V2: bool = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() in ("true", "1", "yes")
     LANGCHAIN_ENDPOINT: str = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
     LANGCHAIN_API_KEY: str = os.getenv("LANGCHAIN_API_KEY", "")
-    LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "migranteu")
+    LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "migrantia")
 
 settings = Settings()
+
+# Propaga configurações de rastreamento do LangSmith diretamente para os.environ
+if settings.LANGCHAIN_TRACING_V2:
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
+    os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+    if settings.LANGCHAIN_API_KEY:
+        os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY

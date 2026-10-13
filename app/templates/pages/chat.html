@@ -7,7 +7,7 @@
 
   <!-- Container do Chat Principal -->
   <div
-    class="bento-card rounded-3xl overflow-hidden shadow-xl border border-slate-200/90 bg-white flex flex-col h-[480px] sm:h-[500px]">
+    class="bento-card rounded-3xl overflow-hidden shadow-xl border border-slate-200/90 bg-white flex flex-col h-[520px] sm:h-[560px]">
 
     <!-- Área de Mensagens -->
     <div id="chat-messages" class="flex-1 overflow-y-auto p-5 sm:p-7 space-y-4">
@@ -23,6 +23,15 @@
             Nosso assistente localiza editais, cursos e orientações oficiais no Brasil.</p>
         </div>
       </div>
+
+      {% if history_messages %}
+        {% for item in history_messages %}
+          {% set role = item.role %}
+          {% set content = item.content %}
+          {% set intent = item.intent %}
+          {% include "partials/chat_message.html" %}
+        {% endfor %}
+      {% endif %}
     </div>
 
     <!-- Indicador de Carregamento HTMX -->
@@ -35,11 +44,22 @@
       Consultando fontes oficiais e formulando resposta...
     </div>
 
-    <!-- Barra de Sugestões Rápidas -->
+    <!-- Barra de Sugestões Rápidas & Ações de Conversa -->
     <div
       class="px-4 sm:px-5 py-2.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-xs">
-      <div class="flex items-center gap-1.5 text-slate-500 font-medium">
+      <div class="flex items-center gap-2 text-slate-500 font-medium">
         <span class="text-slate-600 font-bold">Sugestões rápidas:</span>
+        <button type="button"
+          hx-post="/api/chat/reset"
+          hx-target="#chat-messages"
+          hx-swap="innerHTML"
+          title="Iniciar nova conversa do zero"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 transition-all font-semibold text-[11px] shadow-2xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>Nova Conversa</span>
+        </button>
       </div>
       <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
         <button type="button"
@@ -69,6 +89,7 @@
         hx-indicator="#loading-indicator"
         onsubmit="setTimeout(() => { document.getElementById('chat-input').value = ''; const m = document.getElementById('chat-messages'); m.scrollTop = m.scrollHeight; }, 10);"
         class="flex gap-2.5">
+        <input type="hidden" name="session_id" id="chat-session-id" value="{{ session_id or '' }}">
         <input id="chat-input" type="text" name="message" required
           placeholder="Como podemos ajudar você hoje? (ex: vestibular, curso de português, refúgio)..."
           class="flex-1 px-4 py-3.5 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-400 focus:bg-white transition-all font-medium">
@@ -118,22 +139,26 @@
     }
   });
 
-  // Se a rota forneceu initial_query (?q=...), inicializa e submete automaticamente
+  // Rola para a mensagem mais recente ao carregar o histórico
   window.addEventListener('DOMContentLoaded', () => {
+    const messagesContainer = document.getElementById('chat-messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
     {% if initial_query %}
-    const initialQ = {{ initial_query | tojson
-  }};
-  if (initialQ) {
-    const input = document.getElementById('chat-input');
-    if (input) {
-      input.value = initialQ;
-      const form = document.getElementById('chat-form');
-      if (form && window.htmx) {
-        window.htmx.trigger(form, 'submit');
+    const initialQ = {{ initial_query | tojson }};
+    if (initialQ) {
+      const input = document.getElementById('chat-input');
+      if (input) {
+        input.value = initialQ;
+        const form = document.getElementById('chat-form');
+        if (form && window.htmx) {
+          window.htmx.trigger(form, 'submit');
+        }
       }
     }
-  }
-  {% endif %}
+    {% endif %}
   });
 </script>
 {% endblock %}

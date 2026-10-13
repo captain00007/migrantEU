@@ -238,3 +238,47 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authent
 
 -- Atualização de esquema para suporte a LGPD (consent_at)
 ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW());
+
+
+-- ============================================================================
+-- 12. Tabela de Sessões de Chat (Usuários Finais - Sem Fricção de Login)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS chat_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_token VARCHAR(255) NOT NULL UNIQUE,
+    user_agent TEXT,
+    ip_address VARCHAR(45),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- ============================================================================
+-- 13. Tabela de Histórico de Mensagens com reply_to (Auto-relacionamento)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+    content TEXT NOT NULL,
+    reply_to UUID REFERENCES chat_messages(id) ON DELETE SET NULL,
+    intent_key VARCHAR(50),
+    metadata JSONB DEFAULT '{}'::jsonb,
+    is_flagged BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Índices de Performance para Sessões e Histórico do Chat
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_token ON chat_sessions (session_token);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages (session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_reply_to ON chat_messages (reply_to);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages (session_id, created_at DESC);
+
+-- Trigger de updated_at para chat_sessions
+DROP TRIGGER IF EXISTS set_timestamp_chat_sessions ON chat_sessions;
+CREATE TRIGGER set_timestamp_chat_sessions
+BEFORE UPDATE ON chat_sessions FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+
+-- Permissões de Acesso para Sessões e Mensagens
+GRANT ALL ON chat_sessions TO anon, authenticated, service_role;
+GRANT ALL ON chat_messages TO anon, authenticated, service_role;

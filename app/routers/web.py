@@ -1,11 +1,14 @@
-from app.ai.intent import IntentClassifier
+import uuid
+import markdown
 from fastapi import APIRouter, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.services.notice_service import NoticeService
 from app.services.community_service import CommunityService
+from app.services.chat_service import ChatService
 from app.core.database import SupabaseService
 from app.core.config import settings
+from app.ai.intent import IntentClassifier, INTENTS_MAP
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -63,12 +66,53 @@ async def communities_page(
 
 @router.get("/chat", response_class=HTMLResponse)
 async def chat_page(request: Request, q: str | None = Query(None)):
+    session_token = request.cookies.get("chat_session_id")
+    if not session_token:
+        session_token = str(uuid.uuid4())
+
+    session = await ChatService.get_or_create_session(
+        session_token=session_token,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None
+    )
+    actual_session_id = session.get("id") or session_token
+
+    raw_history = await ChatService.get_session_messages(actual_session_id, limit=20)
+    history_messages = []
+    for msg in raw_history:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        intent = None
+        if role == "assistant":
+            content = markdown.markdown(content, extensions=['extra', 'nl2br'])
+            intent_key = msg.get("intent_key")
+            if intent_key and intent_key in INTENTS_MAP:
+                intent = INTENTS_MAP[intent_key]
+        history_messages.append({
+            "role": role,
+            "content": content,
+            "intent": intent
+        })
+
     initial_intent = await IntentClassifier.detect_intent(q) if q else None
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request,
         name="pages/chat.html",
-        context={"initial_query": q, "initial_intent": initial_intent}
+        context={
+            "initial_query": q,
+            "initial_intent": initial_intent,
+            "session_id": session_token,
+            "history_messages": history_messages
+        }
     )
+    response.set_cookie(
+        "chat_session_id",
+        session_token,
+        httponly=True,
+        samesite="lax",
+        max_age=60 * 60 * 24 * 30
+    )
+    return response
 
 @router.get("/termos-de-uso", response_class=HTMLResponse)
 async def terms_page(request: Request):

@@ -10,10 +10,19 @@
     {% if role == 'user' %}
       bg-gradient-to-r from-sky-500 to-blue-600 text-white font-medium rounded-br-none
     {% else %}
-      bg-slate-50 text-slate-800 border border-slate-200/80 rounded-bl-none shadow-sm
+      {% if is_security_alert %}
+        bg-rose-50/90 text-rose-950 border border-rose-200/90 rounded-bl-none shadow-sm
+      {% else %}
+        bg-slate-50 text-slate-800 border border-slate-200/80 rounded-bl-none shadow-sm
+      {% endif %}
     {% endif %}">
 
-    {% if role != 'user' and intent %}
+    {% if is_security_alert %}
+    <div class="mb-2 pb-2 border-b border-rose-200/70 flex items-center gap-1.5 text-xs font-bold text-rose-700">
+      <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+      <span>Aviso de Segurança & Conformidade</span>
+    </div>
+    {% elif role != 'user' and intent %}
     <div class="mb-3.5 pb-2.5 border-b border-slate-200/70 flex flex-wrap items-center justify-between gap-2">
       <div
         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ intent.badge_class }}">
@@ -30,7 +39,7 @@
     </div>
     {% endif %}
 
-    <div class="{% if role != 'user' %}prose prose-slate prose-sm max-w-none{% endif %}">
+    <div class="{% if role != 'user' and not is_security_alert %}prose prose-slate prose-sm max-w-none{% endif %}">
       {{ content | safe }}
     </div>
   </div>

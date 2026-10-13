@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from app.ai.intent import IntentClassifier, INTENTS_MAP
 from app.ai.prompts.specialized import get_prompt_for_intent, PROMPTS_BY_INTENT
+from app.ai.agent import get_tools_for_intent, process_chat_message
 
 @pytest.mark.unit
 class TestIntentClassifier:
@@ -81,3 +82,39 @@ class TestIntentClassifier:
             prompt = get_prompt_for_intent(intent_key)
             assert len(prompt) > 100
             assert "migrantEU" in prompt
+
+    def test_prompts_are_modular_and_do_not_mix_domains(self):
+        prompt_ensino = get_prompt_for_intent("ensino_superior")
+        assert "ENSINO SUPERIOR" in prompt_ensino
+        assert "CURSOS DE PORTUGUÊS" not in prompt_ensino
+        assert "REGULARIZAÇÃO DOCUMENTAL" not in prompt_ensino
+        assert "COMUNIDADES, ASSOCIAÇÕES" not in prompt_ensino
+
+        prompt_comunidades = get_prompt_for_intent("comunidades")
+        assert "COMUNIDADES" in prompt_comunidades
+        assert "VESTIBULARES E REVALIDAÇÃO" not in prompt_comunidades
+        assert "Celpe-Bras" not in prompt_comunidades
+
+        prompt_portugues = get_prompt_for_intent("curso_portugues")
+        assert "LÍNGUA DE ACOLHIMENTO" in prompt_portugues
+        assert "Sisconare" not in prompt_portugues
+
+    def test_tools_are_modular_per_intent(self):
+        tools_ensino = get_tools_for_intent("ensino_superior")
+        tool_names_ensino = [t.name for t in tools_ensino]
+        assert "check_cached_notices_tool" in tool_names_ensino
+        assert "search_communities_tool" not in tool_names_ensino
+
+        tools_comunidades = get_tools_for_intent("comunidades")
+        tool_names_comunidades = [t.name for t in tools_comunidades]
+        assert "search_communities_tool" in tool_names_comunidades
+        assert "check_cached_notices_tool" not in tool_names_comunidades
+
+    @pytest.mark.asyncio
+    async def test_out_of_scope_early_stops_without_running_second_llm(self):
+        with patch("app.ai.agent.IntentClassifier.detect_intent", return_value={"key": "fora_de_escopo"}):
+            with patch("app.ai.agent.get_migranteu_agent") as mock_get_agent:
+                reply = await process_chat_message("Quem ganhou a copa do mundo de futebol?")
+                assert "fora deste escopo" in reply or "migrantEU" in reply
+                # O segundo LLM (AgentExecutor) NUNCA deve ser invocado!
+                mock_get_agent.assert_not_called()
