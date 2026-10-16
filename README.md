@@ -37,9 +37,9 @@ O projeto foi construído sob a metodologia **SDD (Spec-Driven Development)**, s
   - `llm/`: Factory Pattern com troca dinâmica de provedores em tempo de execução (**Google Gemini**, **OpenAI**, **Ollama**).
   - `guardrails/`: Whitelist estrita de domínios governamentais e acadêmicos (`DomainGuard`) e mascaramento de dados sensíveis (`SafetyGuard`).
   - `retrieval/`: Trava inteligente de cache (`CacheChecker`), impedindo buscas externas na web caso haja edital vigente no banco.
-  - `loader/`: Extração de texto de editais em PDF 100% em memória via `pypdf` (zero gravação em disco).
+  - `loader/`: Extração de texto de editais em PDF.
   - `tools/`: `check_cached_notices_tool`, `safe_web_search_tool` (Tavily restrito) e `live_url_reader_tool`.
-- **Autenticação Administrativa:** **Supabase Auth nativo (`auth.users`)** via cookies seguros HTTP-only.
+- **Autenticação Administrativa:** **Supabase Auth nativo**.
 - **Envio de E-mails:** **Resend API**.
 - **Agendador de Tarefas:** **APScheduler** para expiração diária de editais vencidos.
 
