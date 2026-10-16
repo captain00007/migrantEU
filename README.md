@@ -9,7 +9,7 @@
 [![PWA Ready](https://img.shields.io/badge/PWA-Offline_First-5A0FC8.svg)](https://web.dev/progressive-web-apps/)
 [![Tests](https://img.shields.io/badge/Tests-Pytest_100%25_Passing-brightgreen.svg)](https://docs.pytest.org/)
 
-O **migrantEU** é uma plataforma comunitária e gratuita voltada a migrantes, solicitantes de refúgio e refugiados no Brasil. O sistema centraliza oportunidades educacionais e redes de acolhimento social com zero fricção de acesso (sem login para o usuário final) e eficiência máxima de dados.
+O **migrantEU** é uma plataforma gratuita voltada a migrantes, solicitantes de refúgio e refugiados no Brasil. O sistema centraliza oportunidades educacionais e redes de acolhimento social com zero fricção de acesso (sem login para o usuário final) e eficiência máxima de dados.
 
 ---
 
