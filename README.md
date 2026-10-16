@@ -15,12 +15,12 @@ O **migrantEU** é uma plataforma voltada a migrantes, solicitantes de refúgio 
 
 ## 🎯 Pilares e Funcionalidades
 
-1. **Oportunidades em Universidades Públicas:** Editais de vagas especiais, cotas para refugiados e a **Cátedra Sérgio Vieira de Mello (CSVM/ACNUR)** em instituições como UFPR, USP, UNICAMP, UFRGS, etc.
+1. **Oportunidades em Universidades Públicas:** Editais de vagas especiais, cotas para refugiados em instituições como UFPR, UNILA. UFFS, etc.
 2. **Cursos Gratuitos de Português:** Localizador e alertas de cursos de **Português como Língua de Acolhimento (PLAC)**.
-3. **Rede de Apoio Humanitário & Jurídico:** Conexão com órgãos oficiais e entidades de acolhimento (ACNUR, OIM, Cáritas, Defensoria Pública da União).
+3. **Rede de Apoio Humanitário** Conexão com órgãos oficiais e entidades de acolhimento.
 4. **Assistente Virtual Multilíngue com IA:** Agente conversacional que detecta a língua do migrante (Espanhol, Francês, Crioulo Haitiano, Inglês, etc.) e responde empaticamente com base em fontes oficiais.
 5. **Alertas em Tempo Real por E-mail:** Inscrição rápida por tópicos de interesse com notificações automáticas via **Resend**.
-6. **Moderação Human-in-the-Loop:** Painel administrativo protegido pelo **Supabase Auth** para validação prévia de novos editais descobertos na internet antes do disparo aos usuários.
+6. **Moderação Human-in-the-Loop:** Painel administrativo protegido pelo para validação prévia de novos editais descobertos na internet antes do disparo aos usuários.
 
 ---
 
