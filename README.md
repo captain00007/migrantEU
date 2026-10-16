@@ -172,6 +172,6 @@ pytest -m e2e -v
 
 ---
 
-## 📄 Compromisso Social
+## 📄 Compromisso 
 
-Desenvolvido com carinho para apoiar a reconstrução de vidas, o acesso à educação superior e o acolhimento digno de pessoas em situação de refúgio e migração no Brasil.
+Desenvolvido para apoiar a reconstrução de vidas, o acesso à educação superior e o acolhimento digno de pessoas em situação de refúgio e migração no Brasil.
