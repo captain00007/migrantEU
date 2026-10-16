@@ -167,7 +167,7 @@ pytest -m e2e -v
 ## 🛡️ Segurança & Privacidade
 
 - **Proteção de Dados Pessoais:** O guardrail `SafetyGuard` mascara automaticamente números de CPF e documentos de identidade antes de qualquer envio aos modelos de linguagem.
-- **Whitelist Rígida de Domínios:** Nenhuma ferramenta de busca ou leitura externa acessa URLs fora de portais governamentais (`.gov.br`), acadêmicos (`.edu.br`) e agências humanitárias oficiais (ACNUR, OIM, Cáritas).
+- **Whitelist Rígida de Domínios:** Nenhuma ferramenta de busca ou leitura externa acessa URLs fora de portais governamentais (`.gov.br`), acadêmicos (`.edu.br`) e agências humanitárias oficiais (ACNUR, OIM).
 - **Parsing In-Memory:** Documentos PDF nunca são armazenados no disco rígido do servidor, garantindo privacidade e custo zero de armazenamento efêmero.
 
 ---
